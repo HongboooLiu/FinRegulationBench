@@ -1,175 +1,165 @@
-# Financial Statement Auditing Benchmark
+# Financial Regulation Violation Benchmark
 
-## Overview
+Five tasks evaluate accounting-rule violation detection using synthetic financial statements and real-world financial disclosures. Each dataset includes financial inputs, rule content, and gold labels.
 
-This repository provides complementary real-world and synthetic datasets for evaluating large language models on financial-statement auditing and accounting-compliance tasks.
+## Datasets
 
-The repository contains:
+| Task | Samples | Rule coverage | Input | Target | Format |
+|---|---:|---|---|---|---|
+| Synthetic Simple | 8,801 | 50 rules; 1 per sample | One statement + specified rule | Violation / no violation | JSONL |
+| Synthetic Medium | 4,909 | 49 rules; 8, 13, or 15 candidates per sample | One statement + category-specific rules | One violated rule / no violation | JSONL |
+| Synthetic Hard | 4,277 | 49 candidates; 41 rules occur in positive labels | Four statements + candidate rules | Violated rules and affected rows | JSONL |
+| Real World Simple | 1,197 | 98 rules; 1 per sample | Financial statements and notes + specified rule | Violation / no violation | JSON array |
+| Real World Hard | 888 | 98 candidates per sample | Financial statements and notes + candidate rules | All violated rules / no violation | JSONL |
 
-1. **Real-World Auditing Data**, derived from SEC comment-letter cases and the corresponding financial statements; and
-2. **Synthetic Auditing Dataset**, created by introducing controlled accounting, classification, presentation, and reconciliation errors into financial statements.
+Real World Simple contains 1,197 sample–rule pairs derived from the same 888 source samples as Real World Hard. The two tasks overlap.
 
-Together, the two components support evaluation under both naturally occurring regulatory cases and controlled rule-based violations.
+## Fields and format
 
-> Synthetic violations are created solely for research and should not be interpreted as actual reporting errors made by the companies represented in the dataset.
+| Task | Input field | Gold label field |
+|---|---|---|
+| Synthetic Simple | `prompt` | `gold_label` |
+| Synthetic Medium | `input` | `gold_rule_id` |
+| Synthetic Hard | `input.statements`, `input.candidate_rules` | `label.violated_rule_ids`; details in `label.statements` |
+| Real World Simple | `input.financial_context`, `input.candidate_rules` | `output` |
+| Real World Hard | `input.financial_context`, `input.candidate_rules` | `output.violated_rule_ids` |
 
-## Repository Structure
+Every record has a `sample_id`. JSONL stores one record per line; JSON stores an array. Financial inputs and rule content are included. Keep labels and provenance out of model prompts.
 
-```text
-.
-├── README.md
-├── Real-World-Auditing-Data/
-│   ├── README.md
-│   ├── example_usage.py
-│   └── balanced_table_dataset_simplified.csv
-└── Synthetic-Auditing-Data/
-    ├── README.md
-    ├── example_usage.py
-    ├── final_primary_financial_statement_rules.xlsx
-    ├── synthetic_financial_statement_cases_simplified.jsonl.zip
-    └── final_financial_statement_cases_102_companies.json.zip
-```
+Binary labels are `VIOLATION` / `NO_VIOLATION`. Synthetic Medium uses a rule ID or `NO_VIOLATION`. Real World Hard uses a list of rule IDs or `["NON_VIOLATION"]`, exclusively.
 
-## Dataset Components
+## Distributions
 
-| Component | Source | Size | Primary purpose |
-|---|---|---:|---|
-| `Real-World-Auditing-Data/` | SEC comment letters and referenced SEC filings | 1,092 samples | Binary table-level ASC violation detection |
-| `Synthetic-Auditing-Data/` | Controlled transformations of public financial statements and the corresponding rule set | 10,200 balanced examples derived from 5,100 pairs | Violation detection, rule identification, localization, and explanation |
+| Task | Violation | No violation |
+|---|---:|---:|
+| Synthetic Simple | 4,353 | 4,448 |
+| Synthetic Medium | 4,140 | 769 |
+| Synthetic Hard | 4,277 | 0 |
+| Real World Simple | 619 | 578 |
+| Real World Hard | 459 | 429 |
 
-Each dataset folder contains its own README and minimal usage script. Refer to those files for the detailed schema, task construction, and limitations of each component.
+Synthetic Medium contains 1,410 Balance Sheet, 1,372 Cash Flow, 1,301 Income Statement, and 826 Equity samples. Its 49 candidate rules comprise 15 BS, 13 CF, 13 SI, and 8 SE rules. Synthetic Hard uses the same candidate counts; its observed positive labels cover 15 BS, 12 CF, 7 SI, and 7 SE rules.
 
-## Real-World Auditing Data
+Synthetic Simple covers 15 BS, 12 CF, 13 SI, 7 SE, 2 cross-statement, and 1 error-correction rule.
 
-The real-world benchmark contains 1,092 financial-statement samples:
+| Violated rules per sample | Synthetic Hard | Real World Hard |
+|---|---:|---:|
+| 0 | 0 | 429 |
+| 1 | 1,180 | 331 |
+| 2 | 1,102 | 105 |
+| 3 | 1,032 | 17 |
+| 4 | 963 | 3 |
+| 5 | 0 | 3 |
 
-- 563 confirmed table-level `VIOLATION` samples; and
-- 529 matched `NO_VIOLATION` controls.
+## Benchmark results
 
-Its public CSV uses a compact four-column schema:
+All scores are percentages.
 
-| Column | Description |
-|---|---|
-| `sample_id` | Unique sample identifier |
-| `input` | Target ASC rule and Markdown financial statement presented to the model |
-| `label` | `VIOLATION` or `NO_VIOLATION` |
-| `pair_id` | Identifier linking a violation case with its matched control |
+### Synthetic Simple Task Performance
 
-The principal task is:
+Model: **DeepSeek-V4-Flash**. The dataset contains 8,801 samples, of which 8,613 produced valid predictions and 7,380 were correct. There were 188 parsing or execution failures. Classification metrics below use valid predictions.
 
-```text
-ASC rule + financial statement table -> VIOLATION / NO_VIOLATION
-```
+| Metric | Score (%) |
+|---|---:|
+| Accuracy | 85.68 |
+| Precision — Violation | 86.13 |
+| Recall — Violation | 84.39 |
+| F1 — Violation | 85.25 |
+| Precision — No Violation | 85.27 |
+| Recall — No Violation | 86.92 |
+| F1 — No Violation | 86.09 |
+| Macro F1 | 85.67 |
+| Balanced Accuracy | 85.66 |
+| Full-set accuracy (failures counted as incorrect) | 83.85 |
 
-Run the example:
+These results reuse historical predictions for the retained 8,801-sample cohort after filtering.
 
-```bash
-cd Real-World-Auditing-Data
-python example_usage.py
-```
+### Synthetic Medium Task Performance
 
-For additional details, see [`Real-World-Auditing-Data/README.md`](Real-World-Auditing-Data/README.md).
+Overall accuracy: **74.81% (DeepSeek)** and **78.59% (ChatGPT)**.
 
-## Synthetic Auditing Dataset
+| Table type | # of samples | Correct samples | Accuracy | Macro Precision | Macro Recall | Macro F1 | Weighted F1 |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| Balance Sheet | 1,410 | 1,192 | 84.56 | 86.49 | 83.99 | 83.95 | 85.08 |
+| Cash Flow Statement | 1,372 | 1,102 | 80.30 | 69.70 | 68.91 | 67.92 | 79.45 |
+| Income Statement | 1,301 | 924 | 70.99 | 67.31 | 64.99 | 64.35 | 70.66 |
+| Statement of Equity | 826 | 640 | 77.44 | 86.24 | 87.90 | 83.95 | 77.17 |
+| Overall | 4,909 | 3,858 | 78.59 | 77.15 | 76.60 | 75.28 | 78.51 |
 
-The synthetic dataset is constructed from 5,100 original–synthetic statement pairs covering:
+### Synthetic Hard Task Performance
 
-- 102 companies;
-- 50 synthetic rules;
-- 11 economic sectors; and
-- 50 original–synthetic statement pairs per company.
+| Metric | Score |
+|---|---:|
+| Exact Match Ratio | 0.97 |
+| All gold rules included in predictions (extra predictions allowed) | 67.07 |
+| At least one gold rule matched | 94.84 |
+| Micro Precision | 38.52 |
+| Micro Recall | 83.65 |
+| Micro F1 | 52.75 |
+| Macro Precision | 51.53 |
+| Macro Recall | 70.96 |
+| Macro F1 | 56.90 |
+| Weighted F1 | 68.42 |
 
-The recommended model-ready release expands every pair into two independent examples:
+### Real World Simple Task Performance
 
-```text
-original statement  -> NO_VIOLATION
-synthetic statement -> VIOLATION
-```
+**Accuracy: 67.39%.** The benchmark configuration contains 1,554 sample–rule pairs: 805 violation and 749 non-violation pairs.
 
-This produces an exactly balanced dataset of 10,200 examples: 5,100 `NO_VIOLATION` and 5,100 `VIOLATION` samples. Each model input contains only one financial statement; the model does not receive the original and synthetic statements together.
+| Class | Precision | Recall | F1 |
+|---|---:|---:|---:|
+| Violation | 81.65 | 46.45 | 59.22 |
+| No Violation | 61.58 | 89.15 | 72.84 |
 
-The primary task is binary violation detection:
+### Real World Hard Task Performance
 
-```text
-financial statement -> VIOLATION / NO_VIOLATION
-```
+| Metric | Score |
+|---|---:|
+| Accuracy (Exact Match) | 2.13 |
+| Micro Precision | 3.66 |
+| Micro Recall | 22.81 |
+| Micro F1 | 6.31 |
+| Macro Precision | 5.52 |
+| Macro Recall | 10.10 |
+| Macro F1 | 5.49 |
+| Weighted F1 | 15.46 |
 
-The 5,100 violation examples additionally support:
+### Metric definitions
 
-```text
-financial statement -> rule ID
-financial statement -> violation description
-financial statement -> rule ID + affected lines + explanation
-```
+For each class or rule $c$, let $TP_c$ be correct positive predictions, $FP_c$ incorrect positive predictions, and $FN_c$ missed positives. In single-label classification, each sample has one gold class. In multi-label detection, each candidate rule is treated as a separate binary decision, so a sample can contribute to several rules.
 
-The simplified JSONL file contains four top-level fields: `id`, `input`, `label`, and `metadata`. The full JSON archive preserves the original paired representation, provenance, detailed transformation evidence, and quality-control metadata.
+$$
+P_c = \frac{TP_c}{TP_c + FP_c}, \qquad
+R_c = \frac{TP_c}{TP_c + FN_c}, \qquad
+F1_c = \frac{2P_cR_c}{P_c + R_c}.
+$$
 
-Both examples originating from the same pair share a `metadata.pair_id` and must remain in the same data split.
+**Micro averaging** pools counts across classes before computing the scores. Frequent classes contribute more because they have more instances.
 
-Run the example:
+$$
+P_{\mathrm{micro}} = \frac{\sum_c TP_c}{\sum_c TP_c + \sum_c FP_c}, \qquad
+R_{\mathrm{micro}} = \frac{\sum_c TP_c}{\sum_c TP_c + \sum_c FN_c}.
+$$
 
-```bash
-cd Synthetic-Auditing-Data
-python example_usage.py
-```
+$$
+F1_{\mathrm{micro}} = \frac{2P_{\mathrm{micro}}R_{\mathrm{micro}}}{P_{\mathrm{micro}} + R_{\mathrm{micro}}}.
+$$
 
-For additional details, see [`Synthetic-Auditing-Data/README.md`](Synthetic-Auditing-Data/README.md).
+**Macro averaging** computes each class's score first, then averages equally over the $C$ evaluated classes. Rare and frequent classes receive the same weight.
 
-## Supporting Rule File
+$$
+P_{\mathrm{macro}} = \frac{1}{C}\sum_c P_c, \qquad
+R_{\mathrm{macro}} = \frac{1}{C}\sum_c R_c, \qquad
+F1_{\mathrm{macro}} = \frac{1}{C}\sum_c F1_c.
+$$
 
-### `Synthetic-Auditing-Data/final_primary_financial_statement_rules.xlsx`
+Macro F1 is the average of class-level F1 scores, rather than the harmonic mean of Macro Precision and Macro Recall. For a per-table macro score, average over the evaluated classes associated with that table.
 
-This workbook is stored with the synthetic dataset and documents 50 curated rules intended to be identifiable from primary financial statements. It contains:
+**Weighted F1** weights each class-level F1 by its gold support $n_c = TP_c + FN_c$:
 
-- `Final Rules`: rule identifiers, categories, summaries, ASC references, and synthetic use cases;
-- `Review Summary`: review-level statistics and assessment notes; and
-- `Changes and Exclusions`: documentation of removed, merged, or renumbered candidate rules.
+$$
+F1_{\mathrm{weighted}} = \frac{\sum_c n_c F1_c}{\sum_c n_c}.
+$$
 
-The current workbook and synthetic JSON use related but not identical rule-ID inventories. In particular, the workbook includes `CF-13` and `SE-07`, while the synthetic dataset includes `XS-001` and `XS-002`. Users performing rule-level joins should align the rule-set version explicitly instead of assuming a direct one-to-one match.
+In multi-label tasks, supports count sample–rule labels and may sum to more than the number of samples. Undefined class-level precision, recall, or F1 is assigned zero in the verified Real World Hard evaluation. That evaluation averages rule metrics over the 98 ASC rules, excluding `NON_VIOLATION`.
 
-The workbook's `Final Rules` sheet contains 50 rows, although a retained summary cell reports 48; users should treat the rule table itself as the current inventory and verify version alignment for downstream experiments.
-
-## Supported Research Tasks
-
-The repository supports several evaluation settings:
-
-- binary violation detection;
-- ASC rule verification;
-- rule identification;
-- affected-line-item localization;
-- violation explanation generation;
-- cross-statement consistency checking;
-- robustness evaluation across companies, industries, and statement formats; and
-- comparison between real-world and controlled synthetic violations.
-
-## Recommended Evaluation Protocol
-
-- Keep matched real-world samples together by splitting on `pair_id`.
-- Keep synthetic examples sharing the same `metadata.pair_id` in the same split.
-- Use company-level splits to test generalization to unseen issuers.
-- Use rule-level splits to test generalization to unseen violation types.
-- Prefer company-level splitting for the synthetic dataset because the same original company statement may be reused across multiple rule pairs.
-- Do not expose ground-truth explanations, line-change annotations, case names, or quality-control metadata as model input when those fields are evaluation targets.
-- Report category-level and statement-level results in addition to overall performance.
-- Evaluate real-world and synthetic results separately before reporting any combined aggregate.
-
-## Data Sources and Disclaimer
-
-The repository uses financial-statement information and SEC correspondence derived from publicly available SEC EDGAR filings, together with Audit Analytics source data where applicable.
-
-`NO_VIOLATION` in the real-world benchmark means that no violation associated with the paired target rule was identified under the dataset's construction and screening procedure. It is not a general audit opinion on the filing.
-
-Synthetic records contain intentionally introduced errors. They are designed for controlled research and are not evidence of misconduct, deficient reporting, or audit failure by any represented company.
-
-## Limitations
-
-- Synthetic errors may not reflect the full ambiguity and complexity of real regulatory cases.
-- Matched real-world controls may contain unrelated accounting issues outside the target rule.
-- Financial-statement layouts and terminology vary across issuers and industries.
-- Some synthetic metadata, including a small number of fiscal-year values, requires validation before year-based analysis.
-- Rule identifiers should be versioned carefully when joining the rule workbook to the synthetic dataset.
-- Automated checks support data quality but do not replace professional accounting judgment.
-
-## Citation
-
-A formal citation will be added when the associated paper is released. Until then, please cite the repository URL and the version or commit used in your experiment.
+**Accuracy / exact match** counts the fraction of samples whose predicted label is correct. For multi-label tasks, the entire predicted rule set must equal the gold set; extra or missing rules make the sample incorrect. A no-violation sample is correct only when the model predicts no violation.
