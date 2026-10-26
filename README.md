@@ -53,75 +53,73 @@ Synthetic Simple covers 15 BS, 12 CF, 13 SI, 7 SE, 2 cross-statement, and 1 erro
 
 ## Benchmark results
 
-All scores are percentages.
+All scores are percentages. Blank cells indicate results not reported or not clearly attributable to a model in the slides. Values follow the Baseline Comparison slides.
 
 ### Synthetic Simple Task Performance
 
-Model: **DeepSeek-V4-Flash**. The dataset contains 8,801 samples, of which 8,613 produced valid predictions and 7,380 were correct. There were 188 parsing or execution failures. Classification metrics below use valid predictions.
-
-| Metric | Score (%) |
-|---|---:|
-| Accuracy | 85.68 |
-| Precision — Violation | 86.13 |
-| Recall — Violation | 84.39 |
-| F1 — Violation | 85.25 |
-| Precision — No Violation | 85.27 |
-| Recall — No Violation | 86.92 |
-| F1 — No Violation | 86.09 |
-| Macro F1 | 85.67 |
-| Balanced Accuracy | 85.66 |
-| Full-set accuracy (failures counted as incorrect) | 83.85 |
-
-These results reuse historical predictions for the retained 8,801-sample cohort after filtering.
+| Metric | DeepSeek V4 Flash | ChatGPT 5.5 | Qwen 8B |
+|---|---:|---:|---:|
+| Accuracy | 82.72 | 85.68 | 62.35 |
+| Precision — Violation | 81.36 | 85.70 | 63.44 |
+| Recall — Violation | 86.33 | 85.66 | 61.24 |
+| F1 — Violation | 84.27 | 85.67 | 62.33 |
+| Precision — No Violation | 85.27 | 87.33 | 67.33 |
+| Recall — No Violation | 86.92 | 88.32 | 65.19 |
+| F1 — No Violation | 86.09 | 87.19 | 65.35 |
+| Macro F1 | 85.67 | 86.52 |63.94  |
+| Balanced Accuracy | 85.66 | 87.07 | 63.66 |
 
 ### Synthetic Medium Task Performance
 
-Overall accuracy: **74.81% (DeepSeek)** and **78.59% (ChatGPT)**.
-
-| Table type | # of samples | Correct samples | Accuracy | Macro Precision | Macro Recall | Macro F1 | Weighted F1 |
-|---|---:|---:|---:|---:|---:|---:|---:|
-| Balance Sheet | 1,410 | 1,192 | 84.56 | 86.49 | 83.99 | 83.95 | 85.08 |
-| Cash Flow Statement | 1,372 | 1,102 | 80.30 | 69.70 | 68.91 | 67.92 | 79.45 |
-| Income Statement | 1,301 | 924 | 70.99 | 67.31 | 64.99 | 64.35 | 70.66 |
-| Statement of Equity | 826 | 640 | 77.44 | 86.24 | 87.90 | 83.95 | 77.17 |
-| Overall | 4,909 | 3,858 | 78.59 | 77.15 | 76.60 | 75.28 | 78.51 |
+| Metric | DeepSeek V4 Flash | ChatGPT 5.5 | Qwen 8B |
+|---|---:|---:|---:|
+| Accuracy | 74.42 | 78.59 | 62.32 |
+| Macro Precision | 75.31 | 77.15 | 63.15 |
+| Macro Recall | 74.19 | 76.60 | 65.63 |
+| Macro F1 | 73.36 | 75.28 | 61.44 |
+| Weighted F1 | 75.35 | 78.51 | 65.44 |
 
 ### Synthetic Hard Task Performance
 
-| Metric | Score |
-|---|---:|
-| Exact Match Ratio | 0.97 |
-| All gold rules included in predictions (extra predictions allowed) | 67.07 |
-| At least one gold rule matched | 94.84 |
-| Micro Precision | 38.52 |
-| Micro Recall | 83.65 |
-| Micro F1 | 52.75 |
-| Macro Precision | 51.53 |
-| Macro Recall | 70.96 |
-| Macro F1 | 56.90 |
-| Weighted F1 | 68.42 |
+| Metric | DeepSeek V4 Flash | ChatGPT 5.5 | Qwen 8B |
+|---|---:|---:|---:|
+| Exact Match Ratio | 0.78 | 0.97 | 0.31 |
+| All gold rules included in predictions (extra predictions allowed) | 67.07 |  |  |
+| At least one gold rule matched | 94.84 | 95.25 | 84.71 |
+| Micro Precision | 35.91 | 38.52 | 28.32 |
+| Micro Recall | 81.77 | 83.65 | 68.42 |
+| Micro F1 | 50.33 | 52.75 | 40.12 |
+| Macro Precision | 48.68 | 51.53 | 39.95 |
+| Macro Recall | 67.28 | 70.96 | 57.79 |
+| Macro F1 | 52.71 | 56.90 | 41.33 |
+| Weighted F1 | 63.11 | 68.42 | 49.87 |
 
 ### Real World Simple Task Performance
 
-**Accuracy: 67.39%.** The benchmark configuration contains 1,554 sample–rule pairs: 805 violation and 749 non-violation pairs.
-
-| Class | Precision | Recall | F1 |
+| Metric | DeepSeek V4 Flash | ChatGPT 5.5 | Qwen 8B |
 |---|---:|---:|---:|
-| Violation | 81.65 | 46.45 | 59.22 |
-| No Violation | 61.58 | 89.15 | 72.84 |
+| Accuracy | 67.39 | 65.32 | 47.51 |
+| Precision — Violation | 75.42 | 73.35 | 52.19 |
+| Recall — Violation | 61.38 | 59.71 | 45.21 |
+| F1 — Violation | 64.57 | 65.28 | 50.17 |
+| Precision — No Violation | 61.58 | 58.72 | 53.13 |
+| Recall — No Violation | 89.15 | 88.32 | 59.31 |
+| F1 — No Violation | 72.84 | 71.89 | 54.81 |
 
 ### Real World Hard Task Performance
 
-| Metric | Score |
-|---|---:|
-| Accuracy (Exact Match) | 2.13 |
-| Micro Precision | 3.66 |
-| Micro Recall | 22.81 |
-| Micro F1 | 6.31 |
-| Macro Precision | 5.52 |
-| Macro Recall | 10.10 |
-| Macro F1 | 5.49 |
-| Weighted F1 | 15.46 |
+| Metric | DeepSeek V4 Flash | ChatGPT 5.5 | Qwen 8B |
+|---|---:|---:|---:|
+| Accuracy (Exact Match) | 1.88 | 2.13 | 0.32 |
+| Micro Precision | 3.35 | 3.66 | 2.11 |
+| Micro Recall | 21.45 | 22.81 | 17.73 |
+| Micro F1 | 5.79 | 6.31 | 3.22 |
+| Macro Precision | 4.98 | 5.52 | 3.79 |
+| Macro Recall | 9.16 | 10.10 | 5.32 |
+| Macro F1 | 4.99 | 5.49 | 2.64 |
+| Weighted F1 | 13.71 | 15.46 | 10.37 |
+
+Real World Simple results refer to the historical benchmark cohort of 1,554 sample–rule pairs; the current released dataset contains 1,197 pairs.
 
 ### Metric definitions
 
