@@ -84,7 +84,7 @@ All scores are percentages. Blank cells indicate results not reported or not cle
 | Metric | DeepSeek V4 Flash | ChatGPT 5.5 | Qwen 8B |
 |---|---:|---:|---:|
 | Exact Match Ratio | 0.78 | 0.97 | 0.31 |
-| All gold rules included in predictions (extra predictions allowed) | 67.07 |  |  |
+| All gold rules included in predictions (extra predictions allowed) | 67.07 | 70.03 | 51.39  |
 | At least one gold rule matched | 94.84 | 95.25 | 84.71 |
 | Micro Precision | 35.91 | 38.52 | 28.32 |
 | Micro Recall | 81.77 | 83.65 | 68.42 |
